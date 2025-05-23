@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>射龍門遊戲</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f4f4f4;
+      padding: 20px;
+    }
+    #log {
+      white-space: pre-wrap;
+      background: #fff;
+      padding: 10px;
+      border: 1px solid #ccc;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    button {
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>射龍門遊戲</h1>
+  <p>玩家名稱：<input type="text" id="playerName" /></p>
+  <button onclick="startGame()">開始遊戲</button>
+  <div id="game" style="display:none;">
+    <p>餘額：<span id="money">10000</span></p>
+    <p>下注金額：<input type="number" id="bet" value="1000" /></p>
+    <button onclick="playRound()">下一回合</button>
+    <button id="restartBtn" onclick="restartGame()" style="display:none;">重新開始</button>
+    <div id="log"></div>
+  </div>
+
+  <script>
+    let money = 10000;
+    let playerName = "";
+    let round = 0;
+
+    function randNum() {
+      return Math.floor(Math.random() * 13) + 1;
+    }
+
+    function startGame() {
+      playerName = document.getElementById("playerName").value || "玩家";
+      document.getElementById("game").style.display = "block";
+    }
+
+    function playRound() {
+      let bet = parseInt(document.getElementById("bet").value);
+      if (bet > money || bet <= 0) {
+        alert("下注金額錯誤");
+        return;
+      }
+
+      let num1 = randNum();
+      let num2 = randNum();
+      if (num1 > num2) [num1, num2] = [num2, num1];
+      let num3 = randNum();
+      let result = "";
+      let rate = 13 - Math.abs(num2 - num1);
+
+      round++;
+      if (num1 === num2 || Math.abs(num1 - num2) === 1) {
+        const guess = prompt(`Round ${round}\n數字: ${num1}, ${num2}\n倍率: 1\n請輸入 B(比大) 或 S(比小)`);
+        if (num3 === num1 && num1 === num2) {
+          money -= bet * 3;
+          result = `撞柱！損失 ${bet * 3}`;
+        } else if (num3 === num1 || num3 === num2) {
+          money -= bet * 2;
+          result = `撞柱！損失 ${bet * 2}`;
+        } else if ((guess === 'B' && num3 > num2) || (guess === 'S' && num3 < num1)) {
+          money += bet;
+          result = `贏得 ${bet}`;
+        } else {
+          money -= bet;
+          result = `輸了 ${bet}`;
+        }
+      } else {
+        if (num3 > num1 && num3 < num2) {
+          money += bet * rate;
+          result = `贏得 ${bet * rate}`;
+        } else if (num3 === num1 || num3 === num2) {
+          money -= bet * 2;
+          result = `撞柱！損失 ${bet * 2}`;
+        } else {
+          money -= bet;
+          result = `輸了 ${bet}`;
+        }
+      }
+
+      document.getElementById("money").textContent = money;
+      const log = document.getElementById("log");
+      log.textContent += `\n第${round}回合: 數字 ${num1}, ${num2}, 第三個是 ${num3} => ${result}`;
+      if (money <= 0) {
+        log.textContent += "\n你破產了！遊戲結束。";
+        document.getElementById("restartBtn").style.display = "inline";
+      }
+    }
+
+    function restartGame() {
+      money = 10000;
+      round = 0;
+      document.getElementById("money").textContent = money;
+      document.getElementById("log").textContent = "";
+      document.getElementById("restartBtn").style.display = "none";
+    }
+  </script>
+</body>
+</html>
